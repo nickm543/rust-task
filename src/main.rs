@@ -1,5 +1,7 @@
 mod task;
 
+use std::{fs::File, io::Read, path::Path};
+
 use crate::task::{Task, TaskList, Status};
 use clap::{Parser, Subcommand};
 use colored::Colorize;
@@ -35,10 +37,27 @@ enum Commands {
     Ls,
 }
 
-fn main() {
-    let cli = Cli::parse();    
+pub fn load_config(filename: &str) -> TaskList {
+    let mut file = File::open(filename).unwrap();
+    let mut data = String::new();
+    file.read_to_string(&mut data).unwrap();
 
-    let mut task_list = TaskList::new();
+    let new_task_list: TaskList = serde_json::from_str(&data).unwrap();
+    return new_task_list;
+}
+
+fn main() {
+    const CONFIG_FILE: &str = "./tasks.json";
+    let cli = Cli::parse();
+    let mut task_list: TaskList;
+    
+    // Check if config file exists; if so then load it
+    if Path::new(CONFIG_FILE).exists() {
+        println!("Trying to load config...");
+        task_list = load_config(CONFIG_FILE);
+    } else {
+        task_list = TaskList::new();
+    }
 
     match &cli.command {
         Some(Commands::Add { name, description }) => {
@@ -50,11 +69,11 @@ fn main() {
             );
 
             task_list.add(new_task);
-            // task_list.display();
-            task_list.write_config("./tasks.json");
+            task_list.write_config(CONFIG_FILE);
         }
         Some(Commands::Rm { name }) => {
-            println!("rm command used with argument {}", name);
+            task_list.remove(name);
+            task_list.write_config(CONFIG_FILE)
         }
         Some(Commands::Edit { name }) => {
             println!("edit command used with argument {}", name);

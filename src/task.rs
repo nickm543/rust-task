@@ -1,4 +1,4 @@
-use std::fs::{OpenOptions, write};
+use std::{fs::{write, File, OpenOptions}, io::Read};
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use serde_json::Result;
@@ -70,19 +70,16 @@ impl TaskList {
         }
     }
 
-    pub fn write_config(&mut self, filename: &str) {
-        // let mut f = OpenOptions::new()
-        //     .write(true)
-        //     .truncate(true)
-        //     .open(filename)
-        //     .unwrap();
 
+    pub fn write_config(&mut self, filename: &str) {
         // Serialize task list to JSON
         let json = serde_json::to_string(&self).unwrap(); 
-        println!("{}", json);
 
         // Write to file
-        write(filename, json).expect("Failed to write file");
+        match write(filename, json) {
+            Ok(_) => println!("\n{} Wrote file '{}' containing current task list", "[*]".green(), filename),
+            Err(e) => eprintln!("{} Failed to write to file '{}': {}", "[!]".red(), filename, e),
+        };
 
     }
 }
