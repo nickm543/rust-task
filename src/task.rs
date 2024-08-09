@@ -5,9 +5,9 @@ use serde_json::Result;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Status {
-    NotStarted,
-    InProgress,
-    Complete
+    NotStarted = 0,
+    InProgress = 1,
+    Complete = 2
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -43,6 +43,14 @@ impl TaskList {
     // Add task to list
     pub fn add(&mut self, task: Task) {
         self.list.push(task);
+    }
+
+    // Edit task
+    pub fn edit(&mut self, name: &str, new_name: &str, new_desc: &str) {
+        let index = self.list.iter().position(|r| r.name.eq(name)).unwrap();
+
+        self.list[index].name = String::from(new_name);
+        self.list[index].description = String::from(new_desc);
     }
 
     // Remove task from list

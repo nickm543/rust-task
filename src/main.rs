@@ -30,8 +30,12 @@ enum Commands {
     },
     /// Edit a task
     Edit {
-        /// Name of task
-        name: String
+        /// Name of task to edit
+        name: String,
+        /// New name of task
+        new_name: String,
+        /// New description of task
+        new_description: String
     },
     /// List tasks
     Ls,
@@ -75,8 +79,9 @@ fn main() {
             task_list.remove(name);
             task_list.write_config(CONFIG_FILE)
         }
-        Some(Commands::Edit { name }) => {
-            println!("edit command used with argument {}", name);
+        Some(Commands::Edit { name, new_name, new_description }) => {
+            task_list.edit(name, new_name, new_description);
+            task_list.write_config(CONFIG_FILE);
         }
         Some(Commands::Ls) => {
             task_list.display();
