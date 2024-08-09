@@ -1,124 +1,88 @@
-use std::fs::{OpenOptions, File};
-use std::io::{self, BufRead, Write};
-use std::path::Path;
+use std::fs::{OpenOptions, write};
+use colored::Colorize;
+use serde::{Deserialize, Serialize};
+use serde_json::Result;
 
-#[derive(Debug, PartialEq)]
-pub struct Task {
-    name: String,
-    class: String,
-    date_due: String
+#[derive(Debug, Serialize, Deserialize)]
+pub enum Status {
+    NotStarted,
+    InProgress,
+    Complete
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Task {
+    name: String,
+    description: String,
+    status: Status
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct TaskList {
     list: Vec<Task>
 }
 
 impl Task {
-    pub fn new(name: String, class: String, date_due: String) -> Task {
+    pub fn new(name: String, description: String, status: Status) -> Task {
         Task {
-            name: name,
-            class: class,
-            date_due: date_due
+            name,
+            description,
+            status
         }
     }
 }
 
 impl TaskList {
+    // Create new task list
     pub fn new() -> TaskList {
         TaskList {
             list: vec![]
         }
     }
+
+    // Add task to list
     pub fn add(&mut self, task: Task) {
         self.list.push(task);
     }
+
+    // Remove task from list
     pub fn remove(&mut self, name: &str) {
-        let mut index = 0;
+        let index = self.list.iter().position(|r| r.name.eq(name)).unwrap();
 
-        // Get index of task specified by name
-        for (i, t) in self.list.iter().enumerate() {
-            if t.name == name {
-                index = i;
-            }
-        }
-
-        // Remove that task
         self.list.remove(index);
-        println!("{} was removed.\n", name)
-;    }
+        println!("{} was removed.", name)
+    }
+    
     pub fn display(&mut self) {
         let len = self.list.len();
 
         if len == 1 {
-            println!("There is {} task.", len);
+            println!("There is 1 task.");
         } else {
             println!("There are {} tasks.", len);
         }
 
         for (i, t) in self.list.iter().enumerate() {
-            println!("Task {}", i + 1);
-            println!("\tName: {}", t.name);
-            println!("\tClass: {}", t.class);
-            println!("\tDate due: {}", t.date_due);
+            println!("{} {}", "Task #".green().bold(), i + 1);
+            println!("\t{}: {}", "Name".yellow().bold(), t.name);
+            println!("\t{}: {}", "Description".yellow().bold(), t.description);
+            println!("\t{}: {:?}", "Status".yellow().bold(), t.status);
         }
     }
 
-    fn read_lines<P>(&mut self, filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
-    where P: AsRef<Path>, {
-        let file = File::open(filename)?;
-        Ok(io::BufReader::new(file).lines())
-    }
-
-    pub fn load_config(&mut self, filename: &str) {
-        // Read file line by line
-        if let Ok(lines) = self.read_lines(filename) {
-            for line in lines {
-                if let Ok(current_line) = line {
-                    // One task object per line
-                    let split = current_line.split(":");
-                    let tokens: Vec<&str> = split.collect();
-
-                    let mut _name = String::new();
-                    let mut _class = String::new();
-                    let mut _date = String::new();
-
-                    // Make sure proper fields are there
-                    assert!(tokens[0] == "name", "Malformed config file, name field doesn't exist!");
-                    assert!(tokens[2] == "class", "Malformed config file, class field doesn't exist!");
-                    assert!(tokens[4] == "date", "Malformed config file, date field doesn't exist!");
-
-                    _name = String::from(tokens[1]);
-                    _class = String::from(tokens[3]);
-                    _date = String::from(tokens[5]);
-
-                    // Create the new task with those values
-                    let new_task = Task::new(
-                        _name,
-                        _class,
-                        _date
-                    );
-
-                    // Add the task to the list
-                    self.add(new_task);
-                }
-            }
-        }
-    }
     pub fn write_config(&mut self, filename: &str) {
-        let mut f = OpenOptions::new()
-            .write(true)
-            .truncate(true)
-            .open(filename)
-            .unwrap();
+        // let mut f = OpenOptions::new()
+        //     .write(true)
+        //     .truncate(true)
+        //     .open(filename)
+        //     .unwrap();
 
-        // Create config file line by line from current task list
-        for (_i, t) in self.list.iter().enumerate() {
-            let config_line = format!("name:{}:class:{}:date:{}",
-            t.name, t.class, t.date_due);
+        // Serialize task list to JSON
+        let json = serde_json::to_string(&self).unwrap(); 
+        println!("{}", json);
 
-            if let Err(e) = writeln!(&mut f, "{}", config_line) {
-                eprintln!("Failed to write to file: {}", e);
-            }
-        }
+        // Write to file
+        write(filename, json).expect("Failed to write file");
+
     }
 }
