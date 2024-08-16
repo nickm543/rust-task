@@ -2,17 +2,20 @@
 A task management program written while learning Rust
 
 ## Usage
-Creating new tasks:
+Adding new tasks:
 
-`$ rust-task new --name <name> --class <class> --datedue <date>`
+`$ rust-task add <name> <description>`
 
 Listing tasks:
 
-`$ rust-task list`
+`$ rust-task ls`
 
 Removing tasks:
 
-`$ rust-task rm --name <task to remove>`
+`$ rust-task rm <name>`
+
+Editing tasks:
+`$ rust-task edit <name>`
 
 ## Building and running
 
