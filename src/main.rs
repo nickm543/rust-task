@@ -1,6 +1,6 @@
 mod task;
 
-use std::{fs::File, io::{self, Write}, path::Path};
+use std::{io::{self, Write}, path::Path};
 
 use crate::task::{Task, TaskList, Status, ConfigFile};
 use clap::{Parser, Subcommand};
@@ -79,7 +79,7 @@ fn main() {
         Some(Commands::Edit { name }) => {
             let mut new_name = String::new();
             let mut new_desc = String::new();
-            let mut new_status: Status = Status::NotStarted;
+            let new_status: Status = Status::NotStarted;
 
             println!("{} Editing task '{}':", "[*]".yellow(), name);
 

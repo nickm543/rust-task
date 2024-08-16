@@ -1,7 +1,6 @@
-use std::{fs::{write, File, OpenOptions}, io::Read, process};
+use std::{ fs::{write, File }, io::Read, process };
 use colored::Colorize;
-use serde::{Deserialize, Serialize};
-use serde_json::Result;
+use serde::{ Deserialize, Serialize };
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Status {
@@ -95,9 +94,15 @@ impl TaskList {
     }
 
     pub fn load(&mut self, filename: &str) -> TaskList {
-        let mut file = File::open(filename).unwrap();
+        let file = File::open(filename);
+
+        if file.is_err() {
+            eprintln!("{} Failed to open tasks file '{}'", "[!]".red(), filename);
+            process::exit(1);
+        }
+
         let mut data = String::new();
-        file.read_to_string(&mut data).unwrap();
+        file.unwrap().read_to_string(&mut data).unwrap();
 
         let new_task_list: TaskList = serde_json::from_str(&data).unwrap();
         return new_task_list;
@@ -105,10 +110,15 @@ impl TaskList {
 
     pub fn write_tasks_file(&mut self, filename: &str) {
         // Serialize task list to JSON
-        let json = serde_json::to_string(&self).unwrap(); 
+        let json = serde_json::to_string(&self); 
+
+        if json.is_err() {
+            eprintln!("{} Failed to serialize JSON for tasks file", "[!]".red());
+            process::exit(1);
+        }
 
         // Write to file
-        match write(filename, format!("{}\n", json)) {
+        match write(filename, format!("{}\n", json.unwrap())) {
             Ok(_) => println!("{} Wrote tasks file '{}'", "[*]".green(), filename),
             Err(e) => eprintln!("{} Failed to write to file '{}': {}", "[!]".red(), filename, e),
         };
@@ -118,11 +128,23 @@ impl TaskList {
 
 impl ConfigFile {
     pub fn load(filename: &str) -> ConfigFile {
-        let mut file = File::open(filename).unwrap();
-        let mut data = String::new();
-        file.read_to_string(&mut data).unwrap();
+        let file = File::open(filename);
 
-        let config_file: ConfigFile = serde_json::from_str(&data).unwrap();
+        if file.is_err() {
+            eprintln!("{} Failed to open configuration file '{}'", "[!]".red(), filename);
+            process::exit(1);
+        }
+
+        let mut data = String::new();
+        file.unwrap().read_to_string(&mut data).unwrap();
+
+        let config_file: ConfigFile = if let Ok(config) = serde_json::from_str(&data) {
+            config
+        } else {
+            eprintln!("{} Failed to deserialize JSON configuration file '{}'", "[!]".red(), filename);
+            process::exit(1);
+        };
+
         return config_file;
     }
 }
