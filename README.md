@@ -15,6 +15,7 @@ Removing tasks:
 `$ rust-task rm <name>`
 
 Editing tasks:
+
 `$ rust-task edit <name>`
 
 ## Building and running
