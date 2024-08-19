@@ -50,30 +50,36 @@ impl TaskList {
     }
 
     // Edit task
-    pub fn edit(&mut self, name: &str, new_name: &str, new_desc: &str, new_status: Status) {
-        let index = self.list.iter().position(|r| r.name.eq(name));
-
-        if index.is_none() {
-            eprintln!("{} No such task with name '{}'", "[!]".red(), name);
-            process::exit(1);
+    pub fn edit(&mut self, name: &str, new_name: &str, new_desc: &str, new_status: Status) -> Result<(), &'static str> {
+        if let Some(task) = self.list.iter_mut().find(|r| r.name.eq(name)) {
+            task.name = String::from(new_name);
+            task.description = String::from(new_desc);
+            task.status = new_status;
+            Ok(())
+        } else {
+            Err("No such task found")
         }
-
-        self.list[index.unwrap()].name = String::from(new_name);
-        self.list[index.unwrap()].description = String::from(new_desc);
-        self.list[index.unwrap()].status = new_status;
     }
 
     // Remove task from list
-    pub fn remove(&mut self, name: &str) {
-        let index = self.list.iter().position(|r| r.name.eq(name));
+    pub fn remove(&mut self, name: &str) -> Result<(), &'static str> {
+        // let index = self.list.iter().position(|r| r.name.eq(name));
 
-        if index.is_none() {
-            eprintln!("{} No such task with name '{}'", "[!]".red(), name);
-            process::exit(1);
+        // if index.is_none() {
+        //     eprintln!("{} No such task with name '{}'", "[!]".red(), name);
+        //     process::exit(1);
+        // }
+
+        // self.list.remove(index.unwrap());
+        // println!("Task '{}' was removed.", name)
+
+        if let Some(index) = self.list.iter_mut().position(|r| r.name.eq(name)) {
+            self.list.remove(index);
+            println!("Task '{}' was removed.", name);
+            Ok(())
+        } else {
+            Err("No such task found")
         }
-
-        self.list.remove(index.unwrap());
-        println!("Task '{}' was removed.", name)
     }
     
     pub fn display(&mut self) {

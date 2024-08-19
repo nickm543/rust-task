@@ -1,6 +1,6 @@
 mod task;
 
-use std::{io::{self, Write}, path::Path};
+use std::{io::{self, Write}, path::Path, process};
 
 use crate::task::{Task, TaskList, Status, ConfigFile};
 use clap::{Parser, Subcommand};
@@ -73,8 +73,13 @@ fn main() {
             task_list.write_tasks_file(tasks_filepath);
         }
         Some(Commands::Rm { name }) => {
-            task_list.remove(name);
-            task_list.write_tasks_file(tasks_filepath)
+            match task_list.remove(name) {
+                Ok(_) => task_list.write_tasks_file(tasks_filepath),
+                Err(e) => {
+                    eprintln!("{} Failed to remove task with name '{}': {}", "[!]".red(), name, e);
+                    process::exit(1);
+                }
+            }
         }
         Some(Commands::Edit { name }) => {
             let mut new_name = String::new();
@@ -91,11 +96,16 @@ fn main() {
             io::stdout().flush().expect("Failed to flush stdout.");
             io::stdin().read_line(&mut new_desc).expect("Failed to read new task description");
 
-            task_list.edit(name, new_name.trim(), new_desc.trim(), new_status); 
-            task_list.write_tasks_file(tasks_filepath);
+            match task_list.edit(name, new_name.trim(), new_desc.trim(), new_status) {
+                Ok(_) => task_list.write_tasks_file(tasks_filepath),
+                Err(e) => {
+                    eprintln!("{} Failed to edit task with name '{}': {}", "[!]".red(), name, e);
+                    process::exit(1);
+                }
+            }
         }
         Some(Commands::Ls) => {
-            task_list.display();
+            task_list.display();   
         }
         None => {
             println!("rust-task: Provide a subcommand.");
