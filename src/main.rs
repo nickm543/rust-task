@@ -44,8 +44,7 @@ fn main() {
     if let Some(_matches) = matches.subcommand_matches("list") {
         // Display the task list
         task_list.display();
-    }
-    if let Some(matches) = matches.subcommand_matches("new") {
+    } else if let Some(matches) = matches.subcommand_matches("new") {
         // Add a new task and save it to the config file
         let _name = matches.value_of("name").unwrap();
         let _class = matches.value_of("class").unwrap();
@@ -59,12 +58,13 @@ fn main() {
 
         task_list.add(new_task);
         task_list.write_config(FILENAME);
-    }
-    if let Some(matches) = matches.subcommand_matches("rm") {
+    } else if let Some(matches) = matches.subcommand_matches("rm") {
         let _name = matches.value_of("name").unwrap();
 
         // Remove the task and write the changes to the config
         task_list.remove(_name);
         task_list.write_config(FILENAME);
+    } else {
+        println!("Please provide a subcommand.");
     }
 }
